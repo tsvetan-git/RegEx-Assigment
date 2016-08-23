@@ -1,21 +1,19 @@
 <?php
 session_start();
 
-$dateTimeArr = ['day'=>'',
+$dateTimeArr = [
+		'day'=>'',
+		'2day'=>'',
 		'month'=>'',
+		'2month'=>'',
 		'year'=>'',
+		'2year'=>'',
 		'hour'=>'',
+		'2hour'=>'',
 		'minute'=>'',
-		'second'=>''
-		
-];
-$dateTimeArr2 = ['day2'=>'',
-		'month2'=>'',
-		'year2'=>'',
-		'hour2'=>'',
-		'minute2'=>'',
-		'second2'=>''
-		
+		'2minute'=>'',
+		'second'=>'',
+		'2second'=>''	
 ];
 
 $pattern = [
@@ -29,13 +27,17 @@ $pattern = [
 
 $error = false;
 $message = '';
-$section='2';
+$format = isset($_POST['format']) ? $_POST['format'] : 'Y-m-d H:i:s';
+if(!empty($_POST['format'])){
+	$_SESSION[$format] = $format;
+}else{
+	$_SESSION[$format] = 'Y-m-d H:i:s';
+}
 
 foreach ($dateTimeArr as $key=>$value){
 	$dateTimeArr[$key] = trim(isset($_POST[$key]) ? $_POST[$key] : '');
-	$dateTimeArr2[$key.$section] = trim(isset($_POST[$key.$section]) ? $_POST[$key.$section] : '');
 }
-var_dump($dateTimeArr);
+
 foreach ($dateTimeArr as $key=>$value){
 	if(!empty($_POST[$key])){
 	$_SESSION[$key] = $value;
@@ -43,51 +45,64 @@ foreach ($dateTimeArr as $key=>$value){
 	$_SESSION[$key] = '';
 	}
 }
-foreach ($dateTimeArr2 as $key=>$value){
-	if(!empty($_POST[$key])){
-		$_SESSION[$key] = $value;
-	}else{
-		$_SESSION[$key] = '';
-	}
-}
 
 foreach ($pattern as $key=>$value){
 if(!preg_match($pattern[$key], $dateTimeArr[$key])){
 	$error = true;
+	$message="incorrect input date";
 	}
 }
-
 if(!$error){
-		$ts1 = mktime($dateTimeArr['day'],$dateTimeArr['month'],$dateTimeArr['year'],$dateTimeArr['hour'],$dateTimeArr['minute'],$dateTimeArr['second']);	
-		//echo "$dateTimeArr['day']-$dateTimeArr['month']-$dateTimeArr['year'] $dateTimeArr['hour']:$dateTimeArr['minute']:$dateTimeArr['second']";
-		var_dump($ts1);
+		$ts = mktime(
+				$dateTimeArr['hour']+$dateTimeArr['2hour'],
+				$dateTimeArr['minute']+$dateTimeArr['2minute'],
+				$dateTimeArr['second']+$dateTimeArr['2second'],
+				$dateTimeArr['month']+$dateTimeArr['2month'],
+				$dateTimeArr['day']+$dateTimeArr['2day'],
+				$dateTimeArr['year']+$dateTimeArr['2year']
+				);
 }
-
 ?>
 <html>
 <head>
-<title>date validation</title>
+<title>date calc</title>
 </head>
 <body>
 	<div  id="container">
-		<p><?=$message?></p>
 		<form action="" method="POST">
 			<div>
 			<?php 
 			 foreach ($dateTimeArr as $key=>$value){
-			 	echo "<p><label> $key: </label></p>
-			 		  <input name=\"$key\" type=\"text\" value=\"$_SESSION[$key]\"> 
-			 		  <span> + </span>
-			 		  <input name=\"$key$section\" type=\"text\">";
-			 }		 
+			 	if (!is_numeric((string)$key[0])){
+			 		echo "<p><label> $key : </label></p>";
+			 	}
+			 	if (is_numeric((string)$key[0])){
+			 		echo "<span> + </span>";
+			 	}
+			 	echo "<input name=\"$key\" type=\"number\" value=\"$_SESSION[$key]\">";	 
+			 }			 
 			?> 
 			</div>
 			<p><label> format: </label></p>
-			<p><input name="format" type="text" value="d-m-y H:i:s"></p>
+			<p><input name="format" type="text" value="<?=$_SESSION[$format]?>"></p>
 			<p><input type="submit" value="Submit"/></p>
 		</form>
-		<p><label> ouput: </label></p>
-		<p><input name="format" type="text"></p>
+		<div>
+			<p><label> ouput:</label>
+				<?php 
+					if(!$error){
+						echo date($format,$ts);
+					} 
+				?>
+			</p>
+			<p>
+				<?php 
+				if($error && !empty($_POST)){ 
+					echo $message;
+				}
+				?>
+			</p>
+		</div>
 	</div>
 	</body>
 </html>
