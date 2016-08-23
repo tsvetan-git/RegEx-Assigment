@@ -90,9 +90,9 @@ if(!$error){
 		<div>
 			<p><label> ouput:</label>
 				<?php 
-					if(!$error){
-						echo date($format,$ts);
-					} 
+				if(!$error){
+					echo date($format,$ts);
+				} 
 				?>
 			</p>
 			<p>
